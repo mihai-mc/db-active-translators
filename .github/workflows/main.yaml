@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   build-and-update:
     runs-on: ubuntu-22.04
@@ -16,14 +20,19 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v7
         with:
-          python-version: 3.12
-        
+          python-version: "3.12"
+
+      - name: Google Authentication
+        uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/228574713135/locations/global/workloadIdentityPools/github/providers/github-provider
+          service_account:  db-active-translators@db-active-translators.iam.gserviceaccount.com
+      
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      # - name: Access Google Sheets
-      #   run: python3 src/dummy.py
-
+      - name: Accessing Google Sheets
+        run: python3 src/dummy.py
+        
       - name: Check formatting
         run: black --check .
-

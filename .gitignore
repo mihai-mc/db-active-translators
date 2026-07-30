@@ -12,3 +12,6 @@ env
 
 # Jupyter
 .ipynb_checkpoints
+
+# Secrets
+service-account-credentials.json
