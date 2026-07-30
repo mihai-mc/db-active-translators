@@ -3,7 +3,7 @@
 Service to pull data from the sworn translators database (authorised by the Romanian Ministry of Justice) and correlate it with an internal list of contact details. Gather translators by language and dump everything into a .docx file
 
 ![Python Version](https://img.shields.io/badge/python-3.12-blue)
-![CI](https://github.com/mihai-mc/db-active-translators/actions/workflows/main.yml/badge.svg)
+![CI](https://github.com/mihai-mc/db-active-translators/actions/workflows/main.yaml/badge.svg)
 ![License](https://img.shields.io/github/license/mihai-mc/db-active-translators);
 
 # Requirements
