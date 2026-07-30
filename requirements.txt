@@ -1,0 +1,7 @@
+numpy
+pandas
+jupyter
+openpyxl
+python-docx
+black
+black[jupyter]

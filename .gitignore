@@ -1,0 +1,14 @@
+# macOS
+.DS_Store
+
+# IDE
+.vscode
+.idea
+
+# Python
+__pycache__
+venv
+env
+
+# Jupyter
+.ipynb_checkpoints
