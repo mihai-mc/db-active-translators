@@ -2,9 +2,9 @@ name: "update-translators"
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 permissions:
   id-token: write
@@ -26,13 +26,13 @@ jobs:
         uses: google-github-actions/auth@v3
         with:
           workload_identity_provider: projects/228574713135/locations/global/workloadIdentityPools/github/providers/github-provider
-          service_account:  db-active-translators@db-active-translators.iam.gserviceaccount.com
-      
+          service_account: db-active-translators@db-active-translators.iam.gserviceaccount.com
+
       - name: Install dependencies
         run: pip install -r requirements.txt
 
       - name: Accessing Google Sheets
         run: python3 src/dummy.py
-        
+
       - name: Check formatting
         run: black --check .
