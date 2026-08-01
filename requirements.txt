@@ -7,3 +7,4 @@ openpyxl
 python-docx
 black
 black[jupyter]
+pre-commit
