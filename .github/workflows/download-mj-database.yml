@@ -20,6 +20,16 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: Test MJ connectivity
+        run: |
+          curl -v --connect-timeout 30 https://www.just.ro/ 2>&1 || true
+          curl -v --connect-timeout 30 https://www.just.ro/mj-dmsws/int-mj/traducatori-count 2>&1 || true
+
+      - name: Diagnose MJ connectivity
+        run: |
+          getent hosts www.just.ro
+          curl -4 -v --connect-timeout 30 https://www.just.ro/ 2>&1 || true
+
       - name: Download MJ database
         run: python3 src/download-mj-translators-db.py
 
