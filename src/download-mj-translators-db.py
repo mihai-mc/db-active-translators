@@ -84,7 +84,7 @@ class MinistryOfJustice:
         logger.info(f"Download successful! Downloaded: {len(translators)} translators")
 
         # Dump to file
-        save_path.mkdir(exist_ok=True)
+        save_path.parent.mkdir(exist_ok=True)
         with save_path.open("w", encoding="utf-8") as f:
             json.dump(translators, f, ensure_ascii=False, indent=4)
         logger.info(f"JSON Database saved at: {save_path.absolute()}")
