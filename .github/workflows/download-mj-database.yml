@@ -3,39 +3,34 @@ name: "Cache MJ Database"
 on:
   schedule:
     - cron: "0 3 1 */3 *"
+
   workflow_dispatch:
 
 jobs:
   download-mj-database:
-    runs-on: ubuntu-22.04
+    runs-on: self-hosted
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
-
-      - name: Setup Python
-        uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          clean: false
+
+      - name: Setup Python Virtual Environment
+        run: virtualenv --python=python3.13 env
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: env/bin/pip install -r requirements.txt
 
-      - name: Test MJ connectivity
+      - name: Verify VPN bypass
         run: |
-          curl -v --connect-timeout 30 https://www.just.ro/ 2>&1 || true
-          curl -v --connect-timeout 30 https://www.just.ro/mj-dmsws/int-mj/traducatori-count 2>&1 || true
-
-      - name: Diagnose MJ connectivity
-        run: |
-          getent hosts www.just.ro
-          curl -4 -v --connect-timeout 30 https://www.just.ro/ 2>&1 || true
+          ip rule show | grep -q '^900:' || { echo "just-ro-bypass rule missing: sudo systemctl restart just-ro-bypass"; exit 1; }
 
       - name: Download MJ database
-        run: python3 src/download-mj-translators-db.py
+        run: env/bin/python3 src/download-mj-translators-db.py
 
       - name: Upload MJ database
         uses: actions/upload-artifact@v4
         with:
           name: mj-database
-          path: output/traducatori.json
+          path: output/translators.json
           retention-days: 90
