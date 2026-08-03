@@ -28,9 +28,9 @@ jobs:
       - name: Download MJ database
         run: env/bin/python3 src/download-mj-translators-db.py
 
-#      - name: Upload MJ database
-#        uses: actions/upload-artifact@v4
-#        with:
-#          name: mj-database
-#          path: output/translators.json
-#          retention-days: 90
+      - name: Upload MJ database
+        uses: actions/upload-artifact@v4
+        with:
+          name: mj-database
+          path: output/translators.json
+          retention-days: 90
