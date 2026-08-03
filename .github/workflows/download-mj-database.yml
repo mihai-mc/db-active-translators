@@ -12,12 +12,18 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v5
+        with:
+          clean: false
 
       - name: Setup Python Virtual Environment
         run: virtualenv --python=python3.13 env
 
       - name: Install dependencies
         run: env/bin/pip install -r requirements.txt
+
+      - name: Verify VPN bypass
+        run: |
+          ip rule show | grep -q '^900:' || { echo "just-ro-bypass rule missing: sudo systemctl restart just-ro-bypass"; exit 1; }
 
       - name: Download MJ database
         run: env/bin/python3 src/download-mj-translators-db.py
