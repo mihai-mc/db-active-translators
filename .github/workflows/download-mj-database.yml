@@ -12,11 +12,6 @@ jobs:
     steps:
       - name: Debug CI
         run: |
-          ip rule show | head -5
-          LAN_IP=$(ip -4 -o addr show scope global | awk '{print $4}' | cut -d/ -f1 | grep '^192\.168\.1\.' | head -1)
-          echo "LAN_IP=$LAN_IP"
-          ip -4 route show table main
-          ip route get 85.120.166.106 from "$LAN_IP"
-          echo -n "unbound: "; curl -sS --max-time 15 https://api.ipify.org; echo
-          echo -n "bound:   "; curl -sS --max-time 15 --interface "$LAN_IP" https://api.ipify.org; echo
+          ip route get 85.120.166.106
+          curl -k -sS -o /dev/null --max-time 30 -w 'local=%{local_ip} code=%{http_code}\n' https://www.just.ro/
 
