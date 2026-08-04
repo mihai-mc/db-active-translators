@@ -31,6 +31,15 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
+      - name: "Download Artifact: Filtered MJ Database"
+        uses: dawidd6/action-download-artifact@v6
+        with:
+          workflow: filter-mj-database.yml
+          name: mj-database-filtered
+          path: output
+          if_no_artifact_found: fail
+          use_unzip: true
+
       - name: Accessing Google Sheets
         run: python3 src/dummy.py
 

@@ -2,8 +2,8 @@ import os
 import argparse
 import logging
 import re
+import json
 
-from collections import defaultdict
 from pathlib import Path
 
 import gspread
@@ -86,12 +86,43 @@ class GoogleSheets:
         return translators_by_auth_no
 
 
+def process_mj_data(filtered_db_path: Path) -> dict:
+    logger.info("Loading filtered MJ Database . . .")
+    with open(filtered_db_path, "r") as f:
+        mj_data = json.load(f)
+    logger.info(f"Loaded {len(mj_data.keys())} records . . .")
+
+    # NOTE: We're skipping most checks here as the data is guaranteed to be well-formed
+
+    # Mutate fields
+    logger.info("Processing filtered MJ Database . . .")
+    mj_data_mutated = {}
+    for auth_no, translator_details in mj_data.items():
+
+        translator_name = translator_details["nume"]
+        languages = translator_details["limbiAutorizate"]
+        county = translator_details["judet"]
+        appeals_court = translator_details["curteApel"]
+
+        # Mutate field
+        language = sorted(languages.split(", "))
+        county = (county or "").title()
+        appeals_court = (appeals_court or "").title()
+
+        mj_data_mutated[auth_no] = {
+            "Nume": translator_name,
+            "Limbă/Limbi": languages,
+            "Județ/CA": "\n".join(filter(None, [county, appeals_court])),
+        }
+
+    return mj_data_mutated
+
+
 def parse_args():
     logger.info("Parsing arguments . . .")
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--db-path", type=Path, default=Path("output/translators.json"))
-    parser.add_argument("-s", "--save-path", type=Path, default=Path("output/translators_filtered.json"))
+    parser.add_argument("-f", "--filtered-db-path", type=Path, default=Path("output/translators_filtered.json"))
     args = parser.parse_args()
 
     return args
@@ -111,8 +142,12 @@ def clean_phone_number(phone_number) -> str:
 
 
 def main():
+    args = parse_args()
 
+    mj_data = process_mj_data(args.filtered_db_path)
     google_sheets_data = GoogleSheets.process_spreadsheet_data()
+
+    return
 
 
 if __name__ == "__main__":
