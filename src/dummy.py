@@ -5,6 +5,7 @@ import re
 import json
 
 from pathlib import Path
+from collections import defaultdict
 
 import gspread
 from google.auth import default
@@ -106,7 +107,7 @@ def process_mj_data(filtered_db_path: Path) -> dict:
         appeals_court = translator_details["curteApel"]
 
         # Mutate field
-        language = sorted(languages.split(", "))
+        languages = sorted(languages.split(", "))
         county = (county or "").title()
         appeals_court = (appeals_court or "").title()
 
@@ -135,6 +136,63 @@ def correlate_data(mj_data: dict, google_sheets_data: dict) -> dict:
     correlated_data = {k: {**google_sheets_data[k], **mj_data[k]} for k in google_sheets_data.keys()}
 
     return correlated_data
+
+
+def get_languages(data: dict) -> list:
+    languages = [lang for v in data.values() for lang in v["Limbă/Limbi"]]
+    languages = sorted(list(set(languages)))
+    logger.info(f"Found {len(languages)} languages: {languages}")
+
+    return languages
+
+
+def group_data_by_language(data: dict) -> dict:
+    logger.info(f"Group data by language . . .")
+    languages = get_languages(data=data)
+
+    # Group data by language
+    translators_by_lang = defaultdict(list)
+    for lang in languages:
+        for translator in data.values():
+            if lang in translator["Limbă/Limbi"]:
+                translators_by_lang[lang].append(translator)
+
+    # Handle special cases
+    language_to_category_map = {
+        # Dutch
+        "Olandeză": "Olandeză/Neerlandeză",
+        "Neerlandeză": "Olandeză/Neerlandeză",
+        # Serbo-croatian
+        "Sârbă": "Sârbă și croată",
+        "Croată": "Sârbă și croată",
+        "Sârbo-croată": "Sârbă și croată",
+        # Hebrew
+        "Ebraică": "Ebraică",
+        "Ebraică(ivrit)": "Ebraică",
+        # Greek
+        "Greacă": "Greacă",
+        "Neogreacă": "Greacă",
+        "Greacă veche": "Greacă",
+    }
+
+    # Extract and remap special categories
+    logger.info(f"Handle special languages . . .")
+    category_map = defaultdict(list)
+    for lang, lang_category in language_to_category_map.items():
+        translators = translators_by_lang.pop(lang, None)
+        if translators is not None:
+            category_map[lang] += translators
+
+    # Update original dict
+    translators_by_lang.update(category_map)
+
+    # Sort items by language, then by authorisation number (descendingly)
+    logger.info(f"Sort dictionary by language and by authorisation number (descendingly) . . .")
+    translators_by_lang = dict(sorted(translators_by_lang.items()))
+    for translators in translators_by_lang.values():
+        translators.sort(key=lambda x: int(x["Nr. Aut."]), reverse=True)
+
+    return translators_by_lang
 
 
 def parse_args():
@@ -167,6 +225,9 @@ def main():
     mj_data = process_mj_data(args.filtered_db_path)
     google_sheets_data = GoogleSheets.process_spreadsheet_data()
     correlated_data = correlate_data(mj_data=mj_data, google_sheets_data=google_sheets_data)
+
+    # Group data by language
+    translators_by_lang = group_data_by_language(data=correlated_data)
 
     return
 
