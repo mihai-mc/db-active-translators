@@ -1,6 +1,9 @@
-# Update translator database 
+# Database Update Service: Active translators 
 
-Service to pull data from the sworn translators database (authorised by the Romanian Ministry of Justice) and correlate it with an internal list of contact details. Gather translators by language and dump everything into a .docx file
+Schedule services:
+- pull data from the database of sworn translators (authorised by the Romanian Ministry of Justice)
+- correlate db with an internal list of contact details
+- Gather translators by language and dump everything into a .docx file
 
 ![Python Version](https://img.shields.io/badge/python-3.12-blue)
 ![CI](https://github.com/mihai-mc/db-active-translators/actions/workflows/main.yaml/badge.svg)
@@ -15,14 +18,14 @@ Service to pull data from the sworn translators database (authorised by the Roma
 ## Set up Virtual environment
 
 ``` python
-    virtualenv --python=python3.12 env
-    . env/bin/activate
+    $ virtualenv --python=python3.12 env
+    $ . env/bin/activate
 ```
 
 ## Install Dependencies
 
 ``` python
-    pip install -r requirements.txt
+    $ pip install -r requirements.txt
 ```
 
 ## Convention
