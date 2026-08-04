@@ -30,13 +30,6 @@ jobs:
           if_no_artifact_found: fail
           use_unzip: true
 
-      - name: Upload MJ database
-        uses: actions/upload-artifact@v4
-        with:
-          name: mj-database
-          path: output/translators.json
-          retention-days: 90
-
       - name: Filter MJ Database
         run: python3 src/filter-mj-db.py
 
