@@ -10,6 +10,13 @@ from collections import defaultdict
 import gspread
 from google.auth import default
 
+from docx import Document
+from docx.shared import Cm, Pt
+from docx.oxml.ns import qn
+
+from docx.enum.table import WD_ALIGN_VERTICAL
+from docx.enum.text import WD_ALIGN_PARAGRAPH
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 
 logger = logging.getLogger(__name__)
@@ -195,11 +202,123 @@ def group_data_by_language(data: dict) -> dict:
     return translators_by_lang
 
 
+def generate_docx(data: dict):
+    logger.info(f"Generating docx . . .")
+    docx_document = Document()
+
+    # Narrow margins (in cm)
+    section = docx_document.sections[0]
+    section.top_margin = Cm(1.27)
+    section.bottom_margin = Cm(1.27)
+    section.left_margin = Cm(1.27)
+    section.right_margin = Cm(1.27)
+
+    # Set default font name and size
+    style = docx_document.styles["Normal"]
+    style.font.name = "Arial"
+    style._element.rPr.rFonts.set(qn("w:eastAsia"), "Arial")
+    style.font.size = Pt(10)
+
+    # Fill with data
+    language_to_code = {
+        "Albaneză": "SQ",
+        "Arabă": "AR",
+        "Armeană": "HY",
+        "Bulgară": "BG",
+        "Catalană": "CA",
+        "Cehă": "CZ",
+        "Chineză": "ZH",
+        "Sârbo-croată": "SH",
+        "Sârbă și croată": "SR/HR/SH",
+        "Croată": "HR",
+        "Sârbă": "SR",
+        "Daneză": "DK",
+        "Ebraică": "HE",
+        "Ebraică(ivrit)": "HE",
+        "Engleză": "EN",
+        "Finlandeză": "FI",
+        "Franceză": "FR",
+        "Germană": "DE",
+        "Greacă": "EL",
+        "Neogreacă": "EL",
+        "Greacă veche": "greaca veche",
+        "Italiană": "IT",
+        "Japoneză": "JA",
+        "Latină": "LA",
+        "Lituaniană": "LT",
+        "Macedoneană": "MK",
+        "Maghiară": "HU",
+        "Neerlandeză": "NL",
+        "Olandeză": "NL",
+        "Olandeză/Neerlandeză": "NL",
+        "Norvegiană": "NO",
+        "Persană": "FA",
+        "Polonă": "PL",
+        "Portugheză": "PT",
+        "Rromani": "RMN",
+        "Rusă": "RU",
+        "Slovacă": "SK",
+        "Slovenă": "SL",
+        "Spaniolă": "ES",
+        "Suedeză": "SU",
+        "Turcă": "TR",
+        "Ucraineană": "UA",
+    }
+
+    # Heading and Legend
+    docx_document.add_heading("Lista traducătorilor activi", level=1)
+
+    docx_document.add_heading("Legenda", level=2)
+    docx_document.add_paragraph("DI = disponibil(ă) pentru interpretariat", style="List Bullet")
+    docx_document.add_paragraph("DII = disponibil(ă) pentru interpretariat la Instanțe", style="List Bullet")
+    docx_document.add_paragraph("LA = înscris(ă) pe lista la Ambasadă/Consulat", style="List Bullet")
+
+    # Tables
+    for lang, translators_list in data.items():
+        # Add subtitle
+        docx_document.add_heading(f"{lang} ({language_to_code[lang]})", level=2)
+
+        # Add Table
+        table = docx_document.add_table(
+            rows=1 + len(translators_list), cols=len(list(translators_list[0].keys()))
+        )  # NOTE: 1+ to account for the header too
+        table.style = "Table Grid"
+
+        # Add header
+        header = table.rows[0].cells
+        header[0].text = "Nr. Aut."
+        header[1].text = "Nume"
+        header[2].text = "Limbă/Limbi"
+        header[3].text = "Județ/CA"
+        header[4].text = "DI/DII/LA"
+        header[5].text = "Contact"
+
+        for idx, translator in enumerate(translators_list):
+            cells = table.rows[idx + 1].cells  # NOTE: Offset from the header
+
+            cells[0].text = translator["Nr. Aut."]
+            cells[1].text = translator["Nume"]
+            cells[2].text = ", ".join([language_to_code[x] for x in translator["Limbă/Limbi"]])
+            cells[3].text = translator["Județ/CA"]
+            cells[4].text = translator["DI/DII/LA"]
+            cells[5].text = translator["Contact"]
+
+        # Centre content in all cells
+        for row in table.rows:
+            for cell in row.cells:
+                cell.vertical_alignment = WD_ALIGN_VERTICAL.CENTER
+                for para in cell.paragraphs:
+                    para.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+    return docx_document
+
+
 def parse_args():
     logger.info("Parsing arguments . . .")
 
     parser = argparse.ArgumentParser()
     parser.add_argument("-f", "--filtered-db-path", type=Path, default=Path("output/translators_filtered.json"))
+    parser.add_argument("-s", "--save-path", type=Path, default=Path("output/active_translators.docx"))
     args = parser.parse_args()
 
     return args
@@ -228,6 +347,13 @@ def main():
 
     # Group data by language
     translators_by_lang = group_data_by_language(data=correlated_data)
+
+    # Generate .docx file
+    docx_document = generate_docx(data=translators_by_lang)
+
+    # Save .docx file
+    logger.info(f"Saving .docx file at {args.save_path}")
+    docx_document.save(args.save_path)
 
     return
 
