@@ -99,6 +99,7 @@ def process_mj_data(filtered_db_path: Path) -> dict:
     mj_data_mutated = {}
     for auth_no, translator_details in mj_data.items():
 
+        # Gather fields
         translator_name = translator_details["nume"]
         languages = translator_details["limbiAutorizate"]
         county = translator_details["judet"]
@@ -116,6 +117,24 @@ def process_mj_data(filtered_db_path: Path) -> dict:
         }
 
     return mj_data_mutated
+
+
+def correlate_data(mj_data: dict, google_sheets_data: dict) -> dict:
+    logger.info("Correlating filtered MJ Database with the Google Sheets data . . .")
+
+    # Error log and ignore any entries that DO NOT appear in the MJ database
+    invalid_auth_numbers = google_sheets_data.keys() - mj_data.keys()
+    if len(invalid_auth_numbers) != 0:
+        logger.error(f"The following Authorisation Numbers are invalid and are ignored: {invalid_auth_numbers}")
+        for auth_no in invalid_auth_numbers:
+            google_sheets_data.pop(auth_no)
+    else:
+        logger.info(f"All authorisation numbers are valid . . .")
+
+    # Merge the two dicts by Authorisation Number
+    correlated_data = {k: {**google_sheets_data[k], **mj_data[k]} for k in google_sheets_data.keys()}
+
+    return correlated_data
 
 
 def parse_args():
@@ -144,8 +163,10 @@ def clean_phone_number(phone_number) -> str:
 def main():
     args = parse_args()
 
+    # Correlate data between the MJ database and the Google Sheets worksheet
     mj_data = process_mj_data(args.filtered_db_path)
     google_sheets_data = GoogleSheets.process_spreadsheet_data()
+    correlated_data = correlate_data(mj_data=mj_data, google_sheets_data=google_sheets_data)
 
     return
 
