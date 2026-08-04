@@ -20,13 +20,3 @@ body {
 .btn:hover {
   background-color: #0860ca;
 }
-
-.status {
-  margin-top: 20px;
-  font-size: 14px;
-  color: #666;
-}
-
-.error {
-  color: #d1242f;
-}
