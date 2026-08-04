@@ -43,7 +43,7 @@ jobs:
           if_no_artifact_found: fail
           use_unzip: true
 
-      - name: Accessing Google Sheets
+      - name: Generating .docx (Google Sheets and MJ)
         run: python3 src/generate_docx.py
 
       - name: Upload generated .docx
