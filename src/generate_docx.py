@@ -266,7 +266,10 @@ def generate_docx(data: dict):
     }
 
     # Heading and Legend
-    docx_document.add_heading("Lista traducătorilor activi", level=1)
+    heading = docx_document.add_heading("Lista traducătorilor activi", level=1)
+    heading.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    for run in heading.runs:
+        run.font.size = Pt(20)
 
     docx_document.add_heading("Legenda", level=2)
     docx_document.add_paragraph("DI = disponibil(ă) pentru interpretariat", style="List Bullet")
