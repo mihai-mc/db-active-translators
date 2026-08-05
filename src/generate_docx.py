@@ -188,7 +188,7 @@ def group_data_by_language(data: dict) -> dict:
     for lang, lang_category in language_to_category_map.items():
         translators = translators_by_lang.pop(lang, None)
         if translators is not None:
-            category_map[lang] += translators
+            category_map[lang_category] += translators
 
     # Update original dict
     translators_by_lang.update(category_map)
@@ -334,7 +334,7 @@ def remove_whitespace(text) -> str:
 def clean_phone_number(phone_number) -> str:
     phone_number = remove_whitespace(phone_number)
 
-    if phone_number.startswith("40"):  # The "+" from "+40" got escaped
+    if phone_number.startswith(("40", "34", "35", "36", "39")):  # The "+" from "+40" got escaped
         phone_number = f"+{phone_number}"
 
     return phone_number
